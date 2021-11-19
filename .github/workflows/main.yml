@@ -6,6 +6,7 @@ on:
       - "README.md"
       - "main.yml"
       - ".gitignore"
+      - ".github/"
     branches: [main]
 
 jobs:
