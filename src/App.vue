@@ -1,7 +1,16 @@
 <template>
   <v-app>
-    <full-page>
-      <div class="section">Introduce</div>
+    <full-page ref="fullpage">
+      <div class="section">
+        Introduce
+        <v-btn
+          v-if="isModelReady"
+          color="primary"
+          @click="$refs.fullpage.api.moveSectionDown()"
+        >
+          시작하기
+        </v-btn>
+      </div>
       <div class="section">
         <v-stepper v-model="step">
           <v-stepper-header>
@@ -46,11 +55,32 @@
 </template>
 
 <script>
+import * as tf from "@tensorflow/tfjs";
+const MODEL_URL = "../model/model.json";
+
 export default {
   data() {
     return {
+      isModelReady: false,
+      model: null,
       step: 1,
     };
+  },
+  methods: {
+    loadModel() {
+      this.isModelReady = false;
+      return tf
+        .loadLayersModel(MODEL_URL)
+        .then((model) => {
+          this.model = model;
+          this.isModelReady = true;
+          console.log("model loaded: ", model);
+        })
+        .catch((error) => {
+          console.log("failed to load the model", error);
+          throw error;
+        });
+    },
   },
 };
 </script>
