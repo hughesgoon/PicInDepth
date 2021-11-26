@@ -4,7 +4,7 @@
       <div class="section">
         Introduce
         <v-btn
-          v-if="isModelReady"
+          v-show="isModelReady"
           color="primary"
           @click="$refs.fullpage.api.moveSectionDown()"
         >
