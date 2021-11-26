@@ -21,17 +21,11 @@
             <v-divider></v-divider>
 
             <v-stepper-step :complete="step > 2" step="2">
-              이미지 분석
-            </v-stepper-step>
-
-            <v-divider></v-divider>
-
-            <v-stepper-step :complete="step > 3" step="3">
               편집
             </v-stepper-step>
 
             <v-divider></v-divider>
-            <v-stepper-step :complete="step > 4" step="4">
+            <v-stepper-step :complete="step > 3" step="3">
               완성!
             </v-stepper-step>
           </v-stepper-header>
@@ -56,7 +50,8 @@
 
 <script>
 import * as tf from "@tensorflow/tfjs";
-const MODEL_URL = "../model/model.json";
+
+const MODEL_URL = "https://raw.githubusercontent.com/hughesgoon/PicInDepth/main/model/model.json";
 
 export default {
   data() {
@@ -70,7 +65,7 @@ export default {
     loadModel() {
       this.isModelReady = false;
       return tf
-        .loadLayersModel(MODEL_URL)
+        .loadGraphModel(MODEL_URL)
         .then((model) => {
           this.model = model;
           this.isModelReady = true;
@@ -82,5 +77,8 @@ export default {
         });
     },
   },
+	mounted(){
+	this.loadModel();
+}
 };
 </script>
