@@ -38,6 +38,7 @@
                 placeholder="이미지를 업로드해주세요."
                 prepend-icon="mdi-camera"
                 label="Image"
+                v-model="baseImage"
               ></v-file-input>
             </v-stepper-content>
           </v-stepper-items>
@@ -51,7 +52,8 @@
 <script>
 import * as tf from "@tensorflow/tfjs";
 
-const MODEL_URL = "https://raw.githubusercontent.com/hughesgoon/PicInDepth/main/model/model.json";
+const MODEL_URL =
+  "https://raw.githubusercontent.com/hughesgoon/PicInDepth/main/model/model.json";
 
 export default {
   data() {
@@ -59,6 +61,7 @@ export default {
       isModelReady: false,
       model: null,
       step: 1,
+      baseImage: null,
     };
   },
   methods: {
@@ -76,9 +79,29 @@ export default {
           throw error;
         });
     },
+    image_to_tensor() {
+      var im = new Image();
+      var image_tensor = null;
+      const reader = new FileReader();
+
+      im.onload = () => {
+        image_tensor = tf.browser.fromPixel(im);
+        return image_tensor;
+      };
+
+      reader.addEventListener(
+        "load",
+        function () {
+          im.src = reader.result;
+        },
+        false
+      );
+
+      reader.readAsDataURL(this.baseImage);
+    },
   },
-	mounted(){
-	this.loadModel();
-}
+  mounted() {
+    this.loadModel();
+  },
 };
 </script>
