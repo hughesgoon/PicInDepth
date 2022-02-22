@@ -40,6 +40,13 @@
                 label="Image"
                 v-model="baseImage"
               ></v-file-input>
+              <v-btn
+                :disabled="!baseImage"
+                color="primary"
+                @click="base_processing"
+              >
+                test
+              </v-btn>
             </v-stepper-content>
           </v-stepper-items>
         </v-stepper>
@@ -62,6 +69,7 @@ export default {
       model: null,
       step: 1,
       baseImage: null,
+      baseImage_depthmap: null,
     };
   },
   methods: {
@@ -79,25 +87,56 @@ export default {
           throw error;
         });
     },
-    image_to_tensor() {
+    base_processing() {
+      this.step = 1.5;
+      this.generate_depthmap();
+      this.step = 2;
+    },
+    generate_depthmap() {
       var im = new Image();
-      var image_tensor = null;
       const reader = new FileReader();
 
       im.onload = () => {
-        image_tensor = tf.browser.fromPixel(im);
-        return image_tensor;
+        const resized_tensor = this.image_to_tensor(im);
+        this.baseImage_depthmap = this.tensor_to_depthmap(resized_tensor, [
+          im.width,
+          im.height,
+        ]);
       };
 
-      reader.addEventListener(
-        "load",
-        function () {
-          im.src = reader.result;
-        },
-        false
-      );
+      reader.onload = () => {
+        im.src = reader.result;
+      };
 
       reader.readAsDataURL(this.baseImage);
+    },
+    image_to_tensor(image) {
+      const image_tensor_orig = tf.browser.fromPixels(image);
+      const image_tensor_normalized = image_tensor_orig
+        .toFloat()
+        .div(tf.scalar(255));
+      const image_tensor_resized = tf.image.resizeBilinear(
+        image_tensor_normalized,
+        [224, 224],
+        true
+      );
+      return tf
+        .transpose(image_tensor_resized, [2, 0, 1])
+        .reshape([1, 3, 224, 224]);
+    },
+    async tensor_to_depthmap(tensor, [width, height]) {
+      const depthmap = await this.model.predict(tensor);
+      const depthmap_reshaped = tf
+        .transpose(depthmap, [2, 3, 1, 0])
+        .reshape([224, 224, 1]);
+      const depthmap_resized = tf.image.resizeBilinear(
+        depthmap_reshaped,
+        [height, width],
+        true
+      );
+      return tf
+        .mul(tf.div(depthmap_resized, tf.max(depthmap_resized)), 255)
+        .asType("int32");
     },
   },
   mounted() {
