@@ -140,6 +140,8 @@ export default {
     },
   },
   mounted() {
+    this.$refs.fullpage.api.setAllowScrolling(false);
+    this.$refs.fullpage.api.setKeyboardScrolling(false);
     this.loadModel();
   },
 };
