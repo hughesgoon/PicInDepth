@@ -159,13 +159,11 @@ export default {
         canv.height = im.naturalHeight;
 
         this.imageHeight =
-          im.naturalHeight < im.naturalWidth
-            ? "calc((42.25rem - 156px) * " +
-              im.naturalHeight +
-              " / " +
-              im.naturalWidth +
-              ")"
-            : "70vh";
+          "min(calc((min(100vw, 42.25rem) - 88px) * " +
+          im.naturalHeight +
+          " / " +
+          im.naturalWidth +
+          "), 60vh)";
 
         document
           .getElementsByClassName("controller-lineHeight")[0]
