@@ -48,6 +48,15 @@
                 test
               </v-btn>
             </v-stepper-content>
+
+            <v-stepper-content step="2">
+              <div class="workspace">
+                <div class="wrap">
+                  <img ref="base" />
+                  <canvas ref="canv"></canvas>
+                </div>
+              </div>
+            </v-stepper-content>
           </v-stepper-items>
         </v-stepper>
       </div>
@@ -87,28 +96,50 @@ export default {
           throw error;
         });
     },
-    base_processing() {
+    async base_processing() {
       this.step = 1.5;
-      this.generate_depthmap();
+      const baseImage_dataURL = await this.Image_to_dataURL(this.baseImage);
+      this.setup_workspace(baseImage_dataURL);
+      this.generate_depthmap(baseImage_dataURL);
       this.step = 2;
     },
-    generate_depthmap() {
-      var im = new Image();
-      const reader = new FileReader();
+    generate_depthmap(image) {
+      return new Promise((resolve) => {
+        var im = new Image();
+
+        im.onload = async () => {
+          const resized_tensor = this.image_to_tensor(im);
+          const depthmap = await this.tensor_to_depthmap(resized_tensor, [
+            im.width,
+            im.height,
+          ]);
+          resolve(depthmap);
+        };
+
+        im.src = image;
+      });
+    },
+    Image_to_dataURL(image) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          resolve(reader.result);
+        };
+
+        reader.readAsDataURL(image);
+      });
+    },
+    setup_workspace(baseImage_dataURL) {
+      let im = this.$refs.baseImage;
+      let canv = this.$refs.cans;
 
       im.onload = () => {
-        const resized_tensor = this.image_to_tensor(im);
-        this.baseImage_depthmap = this.tensor_to_depthmap(resized_tensor, [
-          im.width,
-          im.height,
-        ]);
+        canv.width = im.naturalWidth;
+        canv.height = im.naturalHeight;
       };
 
-      reader.onload = () => {
-        im.src = reader.result;
-      };
-
-      reader.readAsDataURL(this.baseImage);
+      im.src = baseImage_dataURL;
     },
     image_to_tensor(image) {
       const image_tensor_orig = tf.browser.fromPixels(image);
