@@ -51,10 +51,28 @@
 
             <v-stepper-content step="2">
               <div class="workspace">
+                <v-slider
+                  class="controller-lineHeight"
+                  v-model="lineHeight"
+                  height="imageHeight"
+                  max="100"
+                  min="0"
+                  vertical
+                  @change="draw_line"
+                ></v-slider>
                 <div class="wrap">
                   <img ref="base" />
                   <canvas ref="canv"></canvas>
                 </div>
+                <v-slider
+                  class="controller-lineHeight"
+                  v-model="lineHeight"
+                  height="imageHeight"
+                  max="100"
+                  min="0"
+                  vertical
+                  @change="draw_line"
+                ></v-slider>
               </div>
             </v-stepper-content>
           </v-stepper-items>
@@ -77,6 +95,8 @@ export default {
       isModelReady: false,
       model: null,
       step: 1,
+      imageHeight: null,
+      lineHeight: 50,
       baseImage: null,
       baseImage_depthmap: null,
     };
@@ -131,15 +151,44 @@ export default {
       });
     },
     setup_workspace(baseImage_dataURL) {
-      let im = this.$refs.baseImage;
-      let canv = this.$refs.cans;
+      let im = this.$refs.base;
+      let canv = this.$refs.canv;
 
       im.onload = () => {
         canv.width = im.naturalWidth;
         canv.height = im.naturalHeight;
+
+        this.imageHeight =
+          im.naturalHeight < im.naturalWidth
+            ? "calc((42.25rem - 156px) * " +
+              im.naturalHeight +
+              " / " +
+              im.naturalWidth +
+              ")"
+            : "70vh";
+
+        document
+          .getElementsByClassName("controller-lineHeight")[0]
+          .getElementsByClassName("v-input__slot")[0].style.height =
+          this.imageHeight;
+        document
+          .getElementsByClassName("controller-lineHeight")[1]
+          .getElementsByClassName("v-input__slot")[0].style.height =
+          this.imageHeight;
       };
 
       im.src = baseImage_dataURL;
+    },
+    draw_line() {
+      var canv = this.$refs.canv;
+      var context = canv.getContext("2d");
+      context.clearRect(0, 0, canv.width, canv.height);
+      context.beginPath();
+      context.moveTo(0, (canv.height * (100 - this.lineHeight)) / 100);
+      context.lineTo(canv.width, (canv.height * (100 - this.lineHeight)) / 100);
+      context.lineWidth = canv.height / 100;
+      context.strokeStyle = "white";
+      context.stroke();
     },
     image_to_tensor(image) {
       const image_tensor_orig = tf.browser.fromPixels(image);
