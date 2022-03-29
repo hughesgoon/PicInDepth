@@ -74,6 +74,31 @@
                   @change="draw_line"
                 ></v-slider>
               </div>
+              <div class="controller-wrap">
+                <input
+                  id="color"
+                  type="color"
+                  v-model="lineColor"
+                  @input="draw_line"
+                />
+                <div class="sliders">
+                  <v-slider
+                    v-model="lineDepth"
+                    hint="값이 작을수록 선이 위로 와요!"
+                    persistent-hint
+                    max="255"
+                    min="0"
+                    label="깊이감"
+                  ></v-slider>
+                  <v-slider
+                    v-model="lineWidth"
+                    max="10"
+                    min="1"
+                    label="두께"
+                    @change="draw_line"
+                  ></v-slider>
+                </div>
+              </div>
             </v-stepper-content>
           </v-stepper-items>
         </v-stepper>
@@ -96,7 +121,10 @@ export default {
       model: null,
       step: 1,
       imageHeight: null,
+      lineColor: "#FFFFFF",
+      lineWidth: 1,
       lineHeight: 50,
+      lineDepth: 128,
       baseImage: null,
       baseImage_depthmap: null,
     };
