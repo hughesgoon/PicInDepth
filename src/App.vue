@@ -212,8 +212,8 @@ export default {
       context.beginPath();
       context.moveTo(0, (canv.height * (100 - this.lineHeight)) / 100);
       context.lineTo(canv.width, (canv.height * (100 - this.lineHeight)) / 100);
-      context.lineWidth = canv.height / 100;
-      context.strokeStyle = "white";
+      context.lineWidth = (canv.height * this.lineWidth) / 100;
+      context.strokeStyle = this.lineColor;
       context.stroke();
     },
     image_to_tensor(image) {
