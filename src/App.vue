@@ -32,6 +32,9 @@
 
           <v-stepper-items>
             <v-stepper-content step="1">
+              <v-overlay :absolute="absolute" :value="overlay">
+                <h2>잠시만 기다려주세요</h2>
+              </v-overlay>
               <v-file-input
                 :rules="rules"
                 accept="image/png, image/jpeg, image/bmp"
@@ -48,7 +51,6 @@
                 test
               </v-btn>
             </v-stepper-content>
-
             <v-stepper-content step="2">
               <div class="workspace">
                 <v-slider
@@ -121,6 +123,8 @@ export default {
       model: null,
       step: 1,
       imageHeight: null,
+      absolute: true,
+      overlay: false,
       lineColor: "#FFFFFF",
       lineWidth: 1,
       lineHeight: 50,
@@ -145,11 +149,18 @@ export default {
         });
     },
     async base_processing() {
-      this.step = 1.5;
+      this.overlay = true;
       const baseImage_dataURL = await this.Image_to_dataURL(this.baseImage);
       this.setup_workspace(baseImage_dataURL);
-      this.generate_depthmap(baseImage_dataURL);
-      this.step = 2;
+      this.generate_depthmap(baseImage_dataURL)
+        .then((depthmap) => {
+          this.baseImage_depthmap = depthmap;
+        })
+        .then(() => {
+          this.draw_line();
+          this.overlay = false;
+          this.step = 2;
+        });
     },
     generate_depthmap(image) {
       return new Promise((resolve) => {
