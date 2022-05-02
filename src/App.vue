@@ -85,12 +85,14 @@
                 />
                 <div class="sliders">
                   <v-slider
+                    :disabled="isMaskGeneratorWorking"
                     v-model="lineDepth"
                     hint="값이 작을수록 선이 위로 와요!"
                     persistent-hint
                     max="255"
                     min="0"
                     label="깊이감"
+                    @change="generate_depth_mask"
                   ></v-slider>
                   <v-slider
                     v-model="lineWidth"
@@ -120,6 +122,7 @@ export default {
   data() {
     return {
       isModelReady: false,
+      isMaskGeneratorWorking: false,
       model: null,
       step: 1,
       imageHeight: null,
@@ -155,6 +158,9 @@ export default {
       this.generate_depthmap(baseImage_dataURL)
         .then((depthmap) => {
           this.baseImage_depthmap = depthmap;
+        })
+        .then(() => {
+          this.generate_depth_mask();
         })
         .then(() => {
           this.draw_line();
@@ -254,6 +260,39 @@ export default {
       return tf
         .mul(tf.div(depthmap_resized, tf.max(depthmap_resized)), 255)
         .asType("int32");
+    },
+    generate_depth_mask() {
+      const canv = this.$refs.canv;
+      const tmp = document.createElement("canvas");
+
+      const depthmap = this.baseImage_depthmap;
+      const depthmap_shape = depthmap.shape;
+      const depth_level = this.lineDepth;
+      var depth_mask = tf.ones([depthmap_shape[0], depthmap_shape[1], 3]);
+      this.isMaskGeneratorWorking = true;
+      if (depth_level == 0) {
+        depth_mask = depth_mask
+          .concat(
+            tf.ones([depthmap_shape[0], depthmap_shape[1], 1]).mul(255),
+            -1
+          )
+          .asType("int32");
+      } else if (depth_level == 255) {
+        depth_mask = depth_mask
+          .concat(tf.zeros([depthmap_shape[0], depthmap_shape[1], 1]), -1)
+          .asType("int32");
+      } else {
+        depth_mask = depth_mask
+          .concat(depthmap.floorDiv(depth_level).minimum(1).mul(255), -1)
+          .asType("int32");
+      }
+      depth_mask.dataSync();
+      tf.browser.toPixels(depth_mask, tmp).then(() => {
+        depth_mask.dispose();
+        var dataURL = tmp.toDataURL();
+        canv.style.webkitMaskImage = "url(" + dataURL + ")";
+        this.isMaskGeneratorWorking = false;
+      });
     },
   },
   mounted() {
