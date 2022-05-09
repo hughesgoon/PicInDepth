@@ -112,6 +112,10 @@
   </v-app>
 </template>
 
+<style lang="scss">
+@import "./assets/index.scss";
+</style>
+
 <script>
 import * as tf from "@tensorflow/tfjs";
 
