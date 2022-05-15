@@ -103,6 +103,21 @@
                   ></v-slider>
                 </div>
               </div>
+              <nav>
+                <v-btn color="primary" @click="step = 1"> 사진 바꾸기 </v-btn>
+                <v-btn color="primary" @click="generate_photo"> 완성! </v-btn>
+              </nav>
+            </v-stepper-content>
+            <v-stepper-content step="3">
+              <div class="showroom">
+                <canvas ref="res"></canvas>
+              </div>
+              <nav>
+                <v-btn color="primary" @click="step = 1"> 사진 바꾸기 </v-btn>
+                <v-btn color="primary" @click="step = 2">
+                  편집기로 돌아가기
+                </v-btn>
+              </nav>
             </v-stepper-content>
           </v-stepper-items>
         </v-stepper>
@@ -226,6 +241,21 @@ export default {
 
       im.src = baseImage_dataURL;
     },
+    apply_mask_to_line() {
+      return new Promise((resolve) => {
+        let im = new Image();
+        let canv = this.$refs.canv;
+        const ctx = canv.getContext("2d");
+
+        im.onload = () => {
+          ctx.globalCompositeOperation = "destination-in";
+          ctx.drawImage(im, 0, 0);
+          resolve();
+        };
+
+        im.src = canv.style.webkitMaskImage.slice(5, -2);
+      });
+    },
     draw_line() {
       var canv = this.$refs.canv;
       var context = canv.getContext("2d");
@@ -296,6 +326,25 @@ export default {
         var dataURL = tmp.toDataURL();
         canv.style.webkitMaskImage = "url(" + dataURL + ")";
         this.isMaskGeneratorWorking = false;
+      });
+    },
+    generate_photo() {
+      const baseImage = this.$refs.base;
+      const line = this.$refs.canv;
+      const space =
+        Math.min(baseImage.naturalWidth, baseImage.naturalHeight) / 10;
+      var canv = this.$refs.res;
+      canv.width = baseImage.naturalWidth + 2 * space;
+      canv.height = baseImage.naturalHeight + 5 * space;
+
+      var ctx = canv.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canv.width, canv.height);
+
+      this.apply_mask_to_line().then(() => {
+        ctx.drawImage(baseImage, space, space);
+        ctx.drawImage(line, space, space);
+        this.step = 3;
       });
     },
   },
